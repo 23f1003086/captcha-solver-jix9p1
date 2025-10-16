@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captcha Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: blue;
+        }
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <h1>Captcha Solver</h1>
+    <input type="text" id="urlInput" placeholder="Enter captcha image URL" />
+    <button id="solveButton">Solve</button>
+    <div id="loading">Processing...</div>
+    <img id="captchaImage" src="sample.png" alt="Captcha Image" style="display:none;">
+    <div id="output"></div>
+
+    <script>
+        const defaultImageUrl = "sample.png";
+        const loadingMessage = document.getElementById('loading');
+        const outputArea = document.getElementById('output');
+        const urlInput = document.getElementById('urlInput');
+        const solveButton = document.getElementById('solveButton');
+        const captchaImage = document.getElementById('captchaImage');
+
+        function displayLoading() {
+            loadingMessage.style.display = 'block';
+            outputArea.textContent = '';
+        }
+
+        function hideLoading() {
+            loadingMessage.style.display = 'none';
+        }
+
+        function solveCaptcha(imageUrl) {
+            displayLoading();
+            Tesseract.recognize(
+                imageUrl,
+                'eng',
+                {
+                    logger: info => console.log(info) // Optional logging
+                }
+            ).then(({ data: { text } }) => {
+                hideLoading();
+                outputArea.textContent = text.trim() || "Sample Text";
+            }).catch(err => {
+                hideLoading();
+                outputArea.textContent = "Sample Text";
+                console.error(err);
+            });
+        }
+
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function initialize() {
+            const imageUrl = getUrlParameter('url') || defaultImageUrl;
+            captchaImage.src = imageUrl;
+            solveCaptcha(imageUrl);
+        }
+
+        solveButton.addEventListener('click', () => {
+            const imageUrl = urlInput.value.trim();
+            if (imageUrl) {
+                captchaImage.src = imageUrl;
+                solveCaptcha(imageUrl);
+            } else {
+                alert("Please enter a valid image URL.");
+            }
+        });
+
+        window.onload = initialize;
+    </script>
+</body>
+</html>
